@@ -61,7 +61,8 @@ RUN cd ${STAGE_DIR} && \
 ENV NV_PEER_MEM_VERSION=1.1
 ENV NV_PEER_MEM_TAG=1.1-0
 RUN mkdir -p ${STAGE_DIR} && \
-    git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
+    #git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
+    COPY nv_peer_memory ${STAGE_DIR}/nv_peer_memory && \
     cd ${STAGE_DIR}/nv_peer_memory && \
     ./build_module.sh && \
     cd ${STAGE_DIR} && \
@@ -109,7 +110,7 @@ RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest
      /opt/conda/bin/conda clean -ya
 
 ENV PATH /opt/conda/bin:$PATH
-RUN pip install --upgrade pip setuptools
+#RUN pip install --upgrade pip setuptools
 RUN wget https://tuna.moe/oh-my-tuna/oh-my-tuna.py && python oh-my-tuna.py
 
 ##############################################################################
