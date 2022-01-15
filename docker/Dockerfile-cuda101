@@ -149,15 +149,15 @@ RUN pip install psutil \
 #RUN git clone --recursive https://github.com/pytorch/pytorch /opt/pytorch
 ENV TORCH_CUDA_ARCH_LIST="3.5 5.2 6.0 6.1 7.0+PTX"
 COPY pytorch /opt/pytorch
-RUN cd /opt/pytorch && git checkout v1.6.0 && \
-    git submodule sync && git submodule update --init --recursive
+#RUN cd /opt/pytorch && git checkout v1.6.0 && \
+#    git submodule sync && git submodule update --init --recursive
 ENV NCCL_LIBRARY=/usr/lib/x86_64-linux-gnu
 ENV NCCL_INCLUDE_DIR=/usr/include
 RUN cd /opt/pytorch && TORCH_NVCC_FLAGS="-Xfatbin -compress-all" \
     CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" USE_SYSTEM_NCCL=1 \
     pip install -v . && rm -rf /opt/pytorch
-COPY vision /opt/vision
-RUN cd /opt/vision && git checkout v0.7.0 && pip install -v .
+#COPY vision /opt/vision
+#RUN cd /opt/vision && git checkout v0.7.0 && pip install -v .
 #COPY .condarc /root/.condarc
 #RUN conda install pytorch=1.6.0 torchvision cudatoolkit=10.1 -c pytorch
 
