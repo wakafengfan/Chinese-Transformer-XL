@@ -167,7 +167,9 @@ RUN pip install tensorboardX==${TENSORBOARDX_VERSION}
 ##############################################################################
 # apex
 ##############################################################################
-RUN git clone https://github.com/NVIDIA/apex ${STAGE_DIR}/apex
+#RUN git clone https://github.com/NVIDIA/apex ${STAGE_DIR}/apex
+RUN mkdir -p ${STAGE_DIR}/apex
+COPY apex ${STAGE_DIR}/apex
 RUN cd ${STAGE_DIR}/apex && pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ \
     && rm -rf ${STAGE_DIR}/apex
 
