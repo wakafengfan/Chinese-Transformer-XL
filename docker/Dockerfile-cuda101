@@ -24,6 +24,7 @@ RUN apt-get update && \
         libcupti-dev \
         libjpeg-dev \
         libpng-dev \
+        libaio-dev \
         screen jq psmisc dnsutils lsof musl-dev systemd
 
 ##############################################################################
