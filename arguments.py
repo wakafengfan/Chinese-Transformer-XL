@@ -301,7 +301,8 @@ def add_data_args(parser):
                        help='path used to save/load sentencepiece tokenization '
                             'models')
     group.add_argument('--tokenizer-type', type=str,
-                       default='BertWordPieceTokenizer',
+                       # default='BertWordPieceTokenizer',
+                       default="ChineseSPTokenizer",
                        choices=['CharacterLevelTokenizer',
                                 'SentencePieceTokenizer',
                                 'BertWordPieceTokenizer',
