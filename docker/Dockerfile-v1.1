@@ -1,6 +1,6 @@
 FROM hub.bilibili.co/fengfan/transformerxl-waka:v1.0
 
-COPY ../requirements.txt /tmp/
+COPY requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
 
 COPY id_rsa.pub /root/id_rsa.pub
