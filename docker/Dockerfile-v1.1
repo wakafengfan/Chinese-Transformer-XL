@@ -1,0 +1,14 @@
+FROM hub.bilibili.co/fengfan/transformerxl-waka:v1.0
+
+COPY ../requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
+
+COPY id_rsa.pub /root/id_rsa.pub
+RUN apt install openssh-server -y && mkdir /var/run/sshd && echo 'root:Deep*_Speed67i' | chpasswd &&\
+    sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config &&\
+    sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config &&\
+    cat /root/id_rsa.pub >> ~/.ssh/authorized_keys &&\
+    apt autoclean
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd","-D"]

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0-devel-ubuntu18.04
+FROM nvidia/cuda:10.1-devel-ubuntu18.04
 
 ##############################################################################
 # Temporary Installation Directory
@@ -24,6 +24,7 @@ RUN apt-get update && \
         libcupti-dev \
         libjpeg-dev \
         libpng-dev \
+        libaio-dev \
         screen jq psmisc dnsutils lsof musl-dev systemd
 
 ##############################################################################
@@ -60,9 +61,10 @@ RUN cd ${STAGE_DIR} && \
 ##############################################################################
 ENV NV_PEER_MEM_VERSION=1.1
 ENV NV_PEER_MEM_TAG=1.1-0
-RUN mkdir -p ${STAGE_DIR} && \
-    git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
-    cd ${STAGE_DIR}/nv_peer_memory && \
+RUN mkdir -p ${STAGE_DIR}/nv_peer_memory
+    #git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
+COPY nv_peer_memory ${STAGE_DIR}/nv_peer_memory
+RUN cd ${STAGE_DIR}/nv_peer_memory && \
     ./build_module.sh && \
     cd ${STAGE_DIR} && \
     tar xzf ${STAGE_DIR}/nvidia-peer-memory_${NV_PEER_MEM_VERSION}.orig.tar.gz && \
@@ -105,11 +107,11 @@ RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh && \
      /opt/conda/bin/conda install -y python=$PYTHON_VERSION numpy pyyaml scipy ipython mkl mkl-include ninja cython typing && \
-     /opt/conda/bin/conda install -y -c pytorch magma-cuda110 && \
+     /opt/conda/bin/conda install -y -c pytorch magma-cuda101 && \
      /opt/conda/bin/conda clean -ya
 
 ENV PATH /opt/conda/bin:$PATH
-RUN pip install --upgrade pip setuptools
+#RUN pip install --upgrade pip setuptools
 RUN wget https://tuna.moe/oh-my-tuna/oh-my-tuna.py && python oh-my-tuna.py
 
 ##############################################################################
@@ -146,18 +148,19 @@ RUN pip install psutil \
 # PyTorch
 ##############################################################################
 #RUN git clone --recursive https://github.com/pytorch/pytorch /opt/pytorch
-ENV TORCH_CUDA_ARCH_LIST="3.5 5.2 6.0 6.1 7.0+PTX 8.0"
+ENV TORCH_CUDA_ARCH_LIST="3.5 5.2 6.0 6.1 7.0+PTX"
 COPY pytorch /opt/pytorch
-RUN cd /opt/pytorch && git checkout 33cf7fd && \
-    git submodule sync && git submodule update --init --recursive
+#RUN cd /opt/pytorch && git checkout v1.6.0 && \
+#    git submodule sync && git submodule update --init --recursive
 ENV NCCL_LIBRARY=/usr/lib/x86_64-linux-gnu
 ENV NCCL_INCLUDE_DIR=/usr/include
 RUN cd /opt/pytorch && TORCH_NVCC_FLAGS="-Xfatbin -compress-all" \
     CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" USE_SYSTEM_NCCL=1 \
     pip install -v . && rm -rf /opt/pytorch
-COPY vision /opt/vision
-RUN cd /opt/vision && git checkout v0.8.0 && pip install -v .
-#RUN conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch
+#COPY vision /opt/vision
+#RUN cd /opt/vision && git checkout v0.7.0 && pip install -v .
+#COPY .condarc /root/.condarc
+#RUN conda install pytorch=1.6.0 torchvision cudatoolkit=10.1 -c pytorch
 
 ENV TENSORBOARDX_VERSION=1.8
 RUN pip install tensorboardX==${TENSORBOARDX_VERSION}
@@ -166,8 +169,10 @@ RUN pip install tensorboardX==${TENSORBOARDX_VERSION}
 # apex
 ##############################################################################
 #RUN git clone https://github.com/NVIDIA/apex ${STAGE_DIR}/apex
-#RUN cd ${STAGE_DIR}/apex && pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ \
-#    && rm -rf ${STAGE_DIR}/apex
+RUN mkdir -p ${STAGE_DIR}/apex
+COPY apex ${STAGE_DIR}/apex
+RUN cd ${STAGE_DIR}/apex && pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ \
+    && rm -rf ${STAGE_DIR}/apex
 
 ##############################################################################
 # PyYAML build issue
@@ -180,18 +185,18 @@ RUN rm -rf /usr/lib/python3/dist-packages/yaml && \
 # DeepSpeed
 ##############################################################################
 #RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
-COPY DeepSpeed ${STAGE_DIR}/DeepSpeed
-RUN cd ${STAGE_DIR}/DeepSpeed && \
-    git checkout . && \
-    DS_BUILD_OPS=1 ./install.sh -r
-RUN rm -rf ${STAGE_DIR}/DeepSpeed
-RUN python -c "import deepspeed; print(deepspeed.__version__)"
+#COPY DeepSpeed ${STAGE_DIR}/DeepSpeed
+#RUN cd ${STAGE_DIR}/DeepSpeed && \
+#    git checkout . && \
+#    DS_BUILD_OPS=1 ./install.sh -r
+#RUN rm -rf ${STAGE_DIR}/DeepSpeed
+#RUN python -c "import deepspeed; print(deepspeed.__version__)"
 
 ## Install Jupyter Notebook
-RUN pip install jupyter notebook && python -m ipykernel install --user --name base --display-name "Python3.7"
-COPY prepare.sh /root/.jupyter/prepare.sh
-RUN chmod +x /root/.jupyter/prepare.sh && mkdir /dataset /workspace /logs /model
-EXPOSE 8888
+#RUN pip install jupyter notebook && python -m ipykernel install --user --name base --display-name "Python3.7"
+#COPY prepare.sh /root/.jupyter/prepare.sh
+#RUN chmod +x /root/.jupyter/prepare.sh && mkdir /dataset /workspace /logs /model
+#EXPOSE 8888
 
 ##############################################################################
 ## Add deepspeed user
@@ -207,7 +212,7 @@ EXPOSE 8888
 ##############################################################################
 ## SSH daemon port inside container cannot conflict with host OS port
 ###############################################################################
-ARG SSH_PORT=22
+ARG SSH_PORT=2222
 RUN cat /etc/ssh/sshd_config > ${STAGE_DIR}/sshd_config && \
     echo "PasswordAuthentication no" >> ${STAGE_DIR}/sshd_config && \
     sed "0,/^Port 22/s//Port ${SSH_PORT}/" ${STAGE_DIR}/sshd_config > /etc/ssh/sshd_config
