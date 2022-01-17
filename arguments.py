@@ -54,7 +54,8 @@ def add_model_config_args(parser):
                        help='layer norm epsilon')
     group.add_argument('--hidden-dropout', type=float, default=0.1,
                        help='dropout probability for hidden state transformer')
-    group.add_argument('--max-position-embeddings', type=int, default=512,
+    # group.add_argument('--max-position-embeddings', type=int, default=512,
+    group.add_argument('--max-position-embeddings', type=int, default=1024,
                        help='maximum number of position embeddings to use')
     group.add_argument('--vocab-size', type=int, default=30522,
                        help='vocab size to use for non-character-level '
@@ -81,7 +82,8 @@ def add_fp16_config_args(parser):
 
     group = parser.add_argument_group('fp16', 'fp16 configurations')
 
-    group.add_argument('--fp16', action='store_true',
+    # group.add_argument('--fp16', action='store_true',
+    group.add_argument('--fp16', default=True,
                        help='Run model in fp16 mode')
     group.add_argument('--fp32-embedding', action='store_true',
                        help='embedding in fp32')
@@ -310,7 +312,8 @@ def add_data_args(parser):
                                 'ChineseSPTokenizer'],
                        help='what type of tokenizer to use')
     group.add_argument('--not-pre-tokenize', action='store_true')
-    group.add_argument("--cache-dir", default=None, type=str,
+    # group.add_argument("--cache-dir", default=None, type=str,
+    group.add_argument("--cache-dir", default="cache", type=str,
                        help="Where to store pre-trained BERT downloads")
     group.add_argument('--use-tfrecords', action='store_true',
                        help='load `--train-data`, `--valid-data`, '
@@ -318,7 +321,8 @@ def add_data_args(parser):
                             'normal data pipeline')
     group.add_argument('--seq-length', type=int, default=512,
                        help="Maximum sequence length to process")
-    group.add_argument('--mem-length', type=int, default=0,
+    # group.add_argument('--mem-length', type=int, default=0,
+    group.add_argument('--mem-length', type=int, default=256,
                        help="The memory length to preserve")
     group.add_argument('--max-preds-per-seq', type=int, default=None,
                        help='Maximum number of predictions to use per sequence.'
